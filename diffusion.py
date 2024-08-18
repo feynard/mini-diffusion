@@ -30,18 +30,16 @@ class DDPM:
 
         self.opt = Adam(self.model, alpha=1e-4)
 
-    def run_epoch(self, key):
-        loss_history = []
-
         def mse(model, x, t, e):
             return jnp.mean((model(x, t) - e) ** 2)
-        
+
         @jax.jit
         def update(opt, model, x, key):
             key_time, key_noise = jax.random.split(key, 2)
 
-            t = jax.random.randint(key_time, [len(x)] + (len(x.shape) - 1) * [1], 0, self.steps)
+            t = jax.random.randint(key_time, (len(x),) + (len(x.shape) - 1) * (1,), 0, self.steps)
             e = jax.random.normal(key_noise, x.shape)
+
             x_e = jnp.sqrt(self.alpha_bar[t]) * x + jnp.sqrt(1 - self.alpha_bar[t]) * e
 
             loss, grads = jax.value_and_grad(mse)(model, x_e, t, e)
@@ -49,27 +47,13 @@ class DDPM:
             model = opt.step(model, grads)
 
             return opt, model, loss
+        
+        self.update = update
 
-        for i in range(0, len(self.data), self.batch_size):
-            x = self.data[i: i + self.batch_size]
-            self.opt, self.model, loss = update(self.opt, self.model, x, key)
-            loss_history.append(loss)
+        @partial(jax.jit, static_argnames='n')
+        def sample_step(model, x, z, i, n):
+            t = jnp.ones((n,) + (len(x.shape) - 1) * (1,), dtype=jnp.uint16) * i
 
-        return np.array(loss_history).mean().item()
-
-
-    def sample(self, key, n: int = 64, return_all_steps: bool = False):
-        keys = jax.random.split(key, self.steps)
-
-        x = jax.random.normal(keys[0], [n] + self.data_shape)
-
-        if return_all_steps:
-            steps = []
-
-        @jax.jit
-        def sample_step(model, x, z, i):
-            t = jnp.ones([n] + (len(x.shape) - 1) * [1], dtype=jnp.uint16) * i
-                
             a = self.alpha[t]
             a_bar = self.alpha_bar[t]
 
@@ -78,18 +62,38 @@ class DDPM:
 
             return x
         
+        self.sample_step = sample_step
+
+    def run_epoch(self, key):
+        loss_history = []
+        
+        for i in range(0, len(self.data), self.batch_size):
+            x = jnp.array(self.data[i: i + self.batch_size])
+            self.opt, self.model, loss = self.update(self.opt, self.model, x, key)
+            loss_history.append(loss)
+
+        return np.array(loss_history).mean().item()
+
+    def sample(self, key, n: int = 64, return_all_steps: bool = False):
+        keys = jax.random.split(key, self.steps)
+
+        x = jax.random.normal(keys[0], (n,) + self.data_shape)
+
+        if return_all_steps:
+            steps = []
+
         for i in reversed(range(self.steps)):
             if i > 0:
                 z = jax.random.normal(keys[i], x.shape)
             else:
                 z = jnp.zeros(x.shape)
 
-            x = sample_step(self.model, x, z, i)
+            x = self.sample_step(self.model, x, z, i, n)
 
             if return_all_steps:
                 steps.append(x)
 
-            if return_all_steps:
-                return steps
-            else:
-                return x
+        if return_all_steps:
+            return steps
+        else:
+            return x

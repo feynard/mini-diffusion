@@ -7,7 +7,7 @@ import jax
 
 def sinusoidal_emb(x, d: int, scale: float = 1.0):
 
-    f = jnp.log((1 / 10000.0) / (d // 2 - 1))
+    f = jnp.log((1 / 10000.0)) / (d // 2 - 1)
     f = scale * jnp.exp(f * jnp.arange(d // 2))[jnp.newaxis, ...]
 
     y = jnp.empty(x.shape + (d, ))
@@ -39,8 +39,9 @@ class MLP:
 
     def __call__(self, x, t):
 
-        x = sinusoidal_emb(x, self.x_pos_dim // x.shape[-1])
-        t = sinusoidal_emb(t, self.t_pos_dim // t.shape[-1])
+        x = sinusoidal_emb(x, self.x_pos_dim // x.shape[-1], scale=25.0)
+        #x = sinusoidal_emb(x, self.x_pos_dim // x.shape[-1])
+        t = sinusoidal_emb(t, self.t_pos_dim)
 
         y = jnp.concatenate((x, t), -1)
 
