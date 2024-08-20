@@ -40,7 +40,6 @@ class MLP:
     def __call__(self, x, t):
 
         x = sinusoidal_emb(x, self.x_pos_dim // x.shape[-1], scale=25.0)
-        #x = sinusoidal_emb(x, self.x_pos_dim // x.shape[-1])
         t = sinusoidal_emb(t, self.t_pos_dim)
 
         y = jnp.concatenate((x, t), -1)
