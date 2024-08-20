@@ -1,8 +1,8 @@
 # Simple DDPM Scheduler
 
+Inspired by [tiny-diffusion](https://github.com/tanelp/tiny-diffusion)
+
 Example of usage:
-
-
 
 ```Python
 time_dim = 128
