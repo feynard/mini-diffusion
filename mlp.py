@@ -1,8 +1,6 @@
-from typing import Tuple
-
-from jax_primitives import modelclass, Linear, Dynamic
-import jax.numpy as jnp
 import jax
+import jax.numpy as jnp
+from jax_primitives import Dynamic, Linear, modelclass
 
 
 def sinusoidal_emb(x, d: int, scale: float = 1.0):

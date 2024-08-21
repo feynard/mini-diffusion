@@ -11,9 +11,9 @@ pos_dim = 32 * data_dim
 diffusion_steps = 512
 n_epochs = 10_000
 
-k = jax.random.key(0)
+k = jp.RandomKey(0) # import jax_primitives as jp
 
-net = MLP(pos_dim, time_dim, 256, data_dim, 6, k)
+net = MLP(pos_dim, time_dim, 256, data_dim, 6, k // 1)
 
 diffusion = DDPM(
     model=net,
@@ -25,8 +25,7 @@ diffusion = DDPM(
 )
 
 for _ in range(n_epochs):
-    k, _ = jax.random.split(k, 2)
-    diffusion.run_epoch(k)
+    diffusion.run_epoch(k // 1)
 
 y = diffusion.sample(k, 10_000)
 ```

@@ -1,8 +1,9 @@
+from functools import partial
+
 import jax
 import jax.numpy as jnp
-from jax_primitives import MLP, Adam
-from functools import partial
 import numpy as np
+from jax_primitives import Adam
 
 
 class DDPM:
