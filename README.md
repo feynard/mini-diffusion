@@ -33,7 +33,7 @@ y = diffusion.sample(k, 10_000)
 ## Fitting a 3D Point Cloud
 
 <p align="center">
-  <img src="images/example.svg" alt="Point Cloud"/>
+  <img src="images/example.png" alt="Point Cloud"/>
 </p>
 
 Source: [Point Cloud of Roses (Sketchfab)](https://sketchfab.com/3d-models/a-point-cloud-of-roses-13495f32fe1340fe91fd35a42c0a76c3)
